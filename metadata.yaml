@@ -1,0 +1,7 @@
+name: astrbot_plugin_pixiv_search
+display_name: Pixiv 搜索与原图解析
+desc: Pixiv 搜索及链接自动解析；全局限速、429 暂停、缓存复用和详细日志；按张数发送原图或 ZIP。
+version: v1.2.0
+author: ilym-expl
+repo: "https://github.com/ilym-expl/astrbot_plugin_pixiv_search"
+astrbot_version: ">=4.9.2,<5"

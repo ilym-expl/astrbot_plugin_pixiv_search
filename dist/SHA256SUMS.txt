@@ -1,0 +1,1 @@
+99cf252285b47d6d081798abea2794acfed4018ab6984fb21b34b479bf349c80  astrbot_plugin_pixiv_search_v1.2.0.zip

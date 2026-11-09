@@ -1,0 +1,195 @@
+{
+  "auto_parse_links": {
+    "description": "自动解析 Pixiv 作品链接",
+    "type": "bool",
+    "default": true,
+    "hint": "群聊和私聊的普通文本中出现 Pixiv 作品链接即下载整个作品，沿用张数阈值、并发、代理及 Cookie。忽略自身消息和 /p 指令，避免重复。保存后重载插件。"
+  },
+  "auto_max_links": {
+    "description": "每条消息最多自动解析的作品数（1–10）",
+    "type": "int",
+    "default": 3,
+    "hint": "同一消息内相同 PID 去重，按链接出现顺序依次处理；多个作品共用一次用户冷却检查。"
+  },
+  "cookie": {
+    "description": "Pixiv Cookie / PHPSESSID",
+    "type": "string",
+    "default": "",
+    "hint": "可填完整 Cookie 或仅 PHPSESSID 值。不在聊天中设置或回显；优先读取环境变量 PIXIV_COOKIE，其次 cookie_file。保存后重载插件。"
+  },
+  "cookie_file": {
+    "description": "Cookie 文本文件路径",
+    "type": "string",
+    "default": "",
+    "hint": "可选，UTF-8 单行文本；支持完整 Cookie 或 PHPSESSID 值。Docker 中填写容器内路径。"
+  },
+  "proxy": {
+    "description": "网络代理",
+    "type": "string",
+    "default": "",
+    "hint": "如 http://127.0.0.1:7890 或 socks5://127.0.0.1:1080；同时用于 API 和图片。留空直连，不读取系统代理变量。Docker 的 127.0.0.1 指向容器自身。"
+  },
+  "api_base_url": {
+    "description": "Pixiv API 根地址",
+    "type": "string",
+    "default": "https://www.pixiv.net",
+    "hint": "可改为自建兼容 Pixiv AJAX 的反向代理根地址；插件在后面拼接 /ajax/...。Cookie 会发给该地址，仅使用可信服务。不是任意第三方搜图 API。"
+  },
+  "image_base_url": {
+    "description": "图片反向代理根地址",
+    "type": "string",
+    "default": "",
+    "hint": "留空使用 pximg.net 原地址；例如 https://your-image-gateway.example，保留原图 URL 的路径和查询参数。图片请求不携带 Pixiv Cookie。"
+  },
+  "search_count": {
+    "description": "默认搜索结果数量（10–30）",
+    "type": "int",
+    "default": 10,
+    "hint": "Tag/用户搜索可通过 --count 临时覆盖；结果不足时返回实际数量。"
+  },
+  "direct_send_limit": {
+    "description": "原图直发阈值 n（0–30）",
+    "type": "int",
+    "default": 5,
+    "hint": "作品总页数 ≤n 逐张发送，>n 将整个作品打成一个 ZIP。设为 0 时所有静态作品均打包。"
+  },
+  "direct_send_mode": {
+    "description": "逐张发送方式",
+    "type": "string",
+    "default": "file",
+    "options": [
+      "file",
+      "image"
+    ],
+    "hint": "file 原文件附件保留字节；image 作为图片消息显示，但平台可能压缩。/p 搜 PID 的首图固定使用图片消息。"
+  },
+  "download_concurrency": {
+    "description": "原图下载并发数（1–16）",
+    "type": "int",
+    "default": 2,
+    "hint": "所有任务共享并发上限；使用异步并发网络 I/O，打包在工作线程执行。"
+  },
+  "max_active_jobs": {
+    "description": "同时执行的命令数量（1–8）",
+    "type": "int",
+    "default": 2,
+    "hint": "任务满时提示稍后重试，避免无限排队。"
+  },
+  "timeout_seconds": {
+    "description": "每次网络读取超时秒数（5–300）",
+    "type": "int",
+    "default": 60,
+    "hint": "连接超时最多 20 秒；此值为 httpx 读/写等待超时，不是整个作品下载的总时长。"
+  },
+  "retries": {
+    "description": "请求失败重试次数（0–5）",
+    "type": "int",
+    "default": 2,
+    "hint": "网络错误、429、5xx 使用退避重试；401、403、404 不重复请求。"
+  },
+  "max_pages": {
+    "description": "单作品最大页面/动图帧数量（1–2000）",
+    "type": "int",
+    "default": 300,
+    "hint": "超限时报错，不截断作品。"
+  },
+  "max_file_mb": {
+    "description": "单文件下载上限 MiB（1–1024）",
+    "type": "int",
+    "default": 50,
+    "hint": "包含原图或动图源 ZIP；不等于平台的上传大小限制。"
+  },
+  "max_total_mb": {
+    "description": "单次下载总量上限 MiB（1–4096）",
+    "type": "int",
+    "default": 500,
+    "hint": "跨页面共享，含重试流量。任一页面失败则不发送缺页 ZIP。ZIP 文件另占一份磁盘空间。"
+  },
+  "cache_ttl_minutes": {
+    "description": "下载文件保留分钟数（5–1440）",
+    "type": "int",
+    "default": 60,
+    "hint": "原图及 ZIP 按最后使用时间过期，每 5 分钟回收；正在构建/发送的资源不会删除。旧版临时目录仍按原规则清理。"
+  },
+  "cooldown_seconds": {
+    "description": "同一会话内同一用户请求间隔秒数（0–3600）",
+    "type": "int",
+    "default": 5,
+    "hint": "0 为关闭；帮助命令不受影响。"
+  },
+  "tag_match": {
+    "description": "Tag 匹配方式",
+    "type": "string",
+    "default": "s_tag_full",
+    "options": [
+      "s_tag_full",
+      "s_tag"
+    ],
+    "hint": "s_tag_full 精确匹配；s_tag 部分匹配。"
+  },
+  "search_mode": {
+    "description": "Tag 搜索内容范围",
+    "type": "string",
+    "default": "all",
+    "options": [
+      "all",
+      "safe",
+      "r18"
+    ],
+    "hint": "只影响 Tag 搜索；所有读取均受 Pixiv Cookie 对应账号的可见权限约束。"
+  },
+  "user_agent": {
+    "description": "请求 User-Agent",
+    "type": "string",
+    "default": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36",
+    "hint": "可使用登录 Pixiv 时的浏览器 User-Agent。"
+  },
+  "api_interval_ms": {
+    "description": "API 请求启动间隔毫秒数（0–60000）",
+    "type": "int",
+    "default": 1500,
+    "hint": "全部用户共享一个 API 队列且串行读取；0 关闭该间隔。"
+  },
+  "image_interval_ms": {
+    "description": "图片请求启动间隔毫秒数（0–60000）",
+    "type": "int",
+    "default": 500,
+    "hint": "全部下载任务共享；与下载并发数同时生效，0 关闭该间隔。"
+  },
+  "rate_limit_cooldown_seconds": {
+    "description": "HTTP 429 全局暂停秒数（1–86400）",
+    "type": "int",
+    "default": 180,
+    "hint": "收到 429 暂停新 API 和图片请求；若 Retry-After 要求更久则按更长时间等待。已发出的请求无法撤回。"
+  },
+  "retry_backoff_seconds": {
+    "description": "网络/5xx 首次重试等待秒数（1–60）",
+    "type": "int",
+    "default": 5,
+    "hint": "指数退避，后续为 2 倍、4 倍，基础等待最多 60 秒；尊重更长的 Retry-After。"
+  },
+  "metadata_cache_minutes": {
+    "description": "作品/搜索接口数据缓存分钟数（1–1440）",
+    "type": "int",
+    "default": 10,
+    "hint": "内存缓存，最多 32 项；相同接口的进行中请求合并。重载后重新读取。"
+  },
+  "cache_max_mb": {
+    "description": "原图及 ZIP 缓存软上限 MiB（10–65536）",
+    "type": "int",
+    "default": 2048,
+    "hint": "每 5 分钟按最久未使用顺序回收，正在构建/发送中的文件不清理；活跃任务期间可暂时超过。"
+  },
+  "log_max_mb": {
+    "description": "单个日志文件大小 MiB（1–100）",
+    "type": "int",
+    "default": 10,
+    "hint": "详细 JSONL 日志位于 data/plugin_data/astrbot_plugin_pixiv_search/logs/pixiv.jsonl，自动轮转。"
+  },
+  "log_backups": {
+    "description": "轮转日志备份数量（1–30）",
+    "type": "int",
+    "default": 5,
+    "hint": "默认保留当前日志及 5 份备份；日志时间使用 UTC，包含任务编号、HTTP 状态、重试及异常栈位置。"
+  }
+}
